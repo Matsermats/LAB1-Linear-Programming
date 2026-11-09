@@ -1,0 +1,228 @@
+% ============================================================
+%  LAB1 -- Linear Programming Assignment (airline problem)
+%  Data Analysis, Optimization and Decision Making -- UAB 2026-27
+%  Deadline: Wednesday 11 November 2026, 23:59 (Campus Virtual)
+%  Template: IEEE Access (ieeeaccess.cls)
+%  Figures: MATLAB scripts in ../matlab/ -> ./figures/
+%  Auto-compile: run   latexmk -pvc   in this folder
+% ============================================================
+\documentclass{ieeeaccess}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\AtBeginDocument{\renewcommand{\ttdefault}{lmtt}}  % Courier not installed
+\newcommand{\todo}[1]{\textcolor{red}{\textbf{TODO:} #1}}
+
+\begin{document}
+\history{Date of submission 11 November 2026.}
+\doi{--}
+
+\title{Linear Programming Assignment: Optimal Number of Flights for Two Aircraft}
+\author{\uppercase{Mats Joris}\authorrefmark{1},
+\todo{Author 2 (add name)}\authorrefmark{1}, and
+\todo{Author 3 (add name)}\authorrefmark{1}}
+
+\address[1]{Master on Research and Innovation in Computer based Science and
+Engineering, Universitat Aut\`onoma de Barcelona, Spain
+(NIU: 1826859, \todo{NIU author 2}, \todo{NIU author 3})}
+
+\markboth
+{Joris \headeretal: Linear Programming Assignment}
+{Joris \headeretal: Linear Programming Assignment}
+
+\corresp{Corresponding author: Mats Joris (NIU: 1826859).}
+
+\begin{abstract}
+An airline has two aircraft and wants to know how many flights each one
+should make. We model this as a linear programming problem and solve it with
+the graphical method and with the simplex method in MATLAB. The maximum
+benefit is 190\,000 euro with 160 flights of A and 40 flights of B. The
+minimum fuel use is with 30 flights of each aircraft.
+\end{abstract}
+
+\begin{keywords}
+Graphical method, linear programming, MATLAB, simplex method.
+\end{keywords}
+
+\titlepgskip=-21pt
+
+\maketitle
+
+% ============================================================
+\section{Introduction}
+% ============================================================
+An airline has two aircraft, A and B, for one route. We want to know how many
+flights each aircraft should make to earn the most money. We write this as a
+linear programming (LP) problem and solve it.
+
+% ============================================================
+\section{Problem Formulation}
+% ============================================================
+Let $x_1$ be the number of flights of aircraft A and $x_2$ the number of
+flights of aircraft B. The objective function is
+\begin{equation}
+  \max Z = 1000\,x_1 + 750\,x_2 .
+  \label{eq:objective}
+\end{equation}
+The constraints are:
+\begin{align*}
+  x_1 &\ge x_2           && \text{(C1)}\\
+  x_1 - x_2 &\le 120     && \text{(C2)}\\
+  x_2 &\le 180           && \text{(C3)}\\
+  x_1 + x_2 &\ge 60      && \text{(C4)}\\
+  x_1 + x_2 &\le 200     && \text{(C5)}\\
+  x_1,\ x_2 &\ge 0       && \text{(nonnegativity)}
+\end{align*}
+For C1 we use $x_1 \ge x_2$ instead of $x_1 > x_2$, because LP does not
+work with strict inequalities.
+
+% ============================================================
+\section{Part 1a: Graphical Solution}
+% ============================================================
+We draw every constraint as a line (Fig.~\ref{fig:graphical}). The green
+area is the feasible region. Then we compute $Z$ in each extreme point
+(Table~\ref{tab:points}).
+
+\Figure[t!](topskip=0pt, botskip=0pt, midskip=0pt)[width=0.95\columnwidth]{fig_part1a_graphical.pdf}
+{Graphical solution. The dashed line is the isoprofit line through the optimum.
+\label{fig:graphical}}
+
+\begin{table}[h]
+\centering
+\caption{Extreme points and value of $Z$.}
+\label{tab:points}
+\begin{tabular}{cccc}
+\hline
+Point & Intersection & $(x_1, x_2)$ & $Z$ (\texteuro) \\
+\hline
+A & C4 and $x_2 = 0$ & $(60, 0)$    & 60\,000  \\
+B & C2 and $x_2 = 0$ & $(120, 0)$   & 120\,000 \\
+C & C2 and C5        & $(160, 40)$  & \textbf{190\,000} \\
+D & C1 and C5        & $(100, 100)$ & 175\,000 \\
+E & C1 and C4        & $(30, 30)$   & 52\,500  \\
+\hline
+\end{tabular}
+\end{table}
+
+$Z$ is highest in point C. So the best solution is $x_1 = 160$ flights for
+A and $x_2 = 40$ flights for B, which gives $Z = 190\,000$\,\texteuro.
+
+% ============================================================
+\section{Part 1b: Redundant Constraints}
+% ============================================================
+Yes. Constraint C3 ($x_2 \le 180$) is a redundant constraint, because it
+does not change the feasible region. From C1 and C5 we get
+$2x_2 \le x_1 + x_2 \le 200$, so $x_2 \le 100$ in the whole feasible region.
+In Fig.~\ref{fig:graphical} the line of C3 lies above the green area. If we
+remove C3, the feasible region and the solution stay the same.
+
+C1 and C4 are also not used at the optimum (point C is on C2 and C5). If we
+remove one or both of them, the feasible region gets bigger, but point C is still the
+best point. Only C2 and C5 cannot be removed, because they define point C.
+
+% ============================================================
+\section{Part 1c: Simplex Method with MATLAB}
+% ============================================================
+MATLAB solves LP problems with \texttt{linprog}, in the form
+\[
+  \min_x f^T x \quad \text{subject to} \quad A x \le b,\ \ x \ge lb .
+\]
+Our problem is a maximization, so we minimize $-Z$:
+\[
+  \min\, -Z = -1000\,x_1 - 750\,x_2 .
+\]
+All constraints are written as $\le$. For C1 and C4 we multiply by $-1$:
+\[
+  A = \begin{bmatrix} -1 & 1 \\ 1 & -1 \\ 0 & 1 \\ -1 & -1 \\ 1 & 1 \end{bmatrix},\quad
+  b = \begin{bmatrix} 0 \\ 120 \\ 180 \\ -60 \\ 200 \end{bmatrix},
+\]
+\[
+  f = \begin{bmatrix} -1000 \\ -750 \end{bmatrix},\quad
+  lb = \begin{bmatrix} 0 \\ 0 \end{bmatrix}.
+\]
+We use the simplex algorithm of \texttt{linprog}:
+\begin{verbatim}
+options = optimoptions('linprog', ...
+          'Algorithm','dual-simplex');
+[x,fval] = linprog(f,A,b,[],[],lb,[],options)
+Z = -fval
+\end{verbatim}
+MATLAB gives:
+\begin{verbatim}
+Optimal solution found.
+x =
+   160
+    40
+fval =
+     -190000
+Z =
+      190000
+\end{verbatim}
+So $x_1 = 160$, $x_2 = 40$ and $Z = -\text{fval} = 190\,000$\,\texteuro.
+This is the same result as with the graphical method (point C).
+
+% ============================================================
+\section{Part 2: Minimum Fuel Consumption}
+% ============================================================
+Let one flight of B use 1 unit of fuel. Then one flight of A uses 2 units.
+The constraints are the same as in Part 1, but now we minimize the total fuel:
+\[
+  \min F = 2\,x_1 + x_2 .
+\]
+
+\textit{Graphical method.} The feasible region is the same as in Part 1
+(Fig.~\ref{fig:fuel}). We compute $F$ in each extreme point
+(Table~\ref{tab:fuel}).
+
+\Figure[t!](topskip=0pt, botskip=0pt, midskip=0pt)[width=0.95\columnwidth]{fig_part2_fuel.pdf}
+{Graphical solution of Part 2. The dashed line is the isocost line through
+the optimum.\label{fig:fuel}}
+
+\begin{table}[h]
+\centering
+\caption{Extreme points and value of $F$.}
+\label{tab:fuel}
+\begin{tabular}{ccc}
+\hline
+Point & $(x_1, x_2)$ & $F$ (units) \\
+\hline
+A & $(60, 0)$    & 120 \\
+B & $(120, 0)$   & 240 \\
+C & $(160, 40)$  & 360 \\
+D & $(100, 100)$ & 300 \\
+E & $(30, 30)$   & \textbf{90} \\
+\hline
+\end{tabular}
+\end{table}
+
+$F$ is lowest in point E, so $x_1 = 30$, $x_2 = 30$ and $F = 90$ units.
+
+\textit{Simplex method with MATLAB.} We use the same $A$, $b$ and $lb$ as in
+Part 1c, with $f = [2 \;\; 1]^T$. MATLAB gives:
+\begin{verbatim}
+Optimal solution found.
+x =
+    30
+    30
+fval =
+    90
+\end{verbatim}
+This is the same result as with the graphical method.
+
+\textit{Note.} In point E both aircraft make 30 flights, so A does not fly
+more than B. If A must make at least one flight more ($x_1 \ge x_2 + 1$), the
+best whole numbers are $x_1 = 31$ and $x_2 = 29$, with $F = 91$ units.
+
+% ============================================================
+\section{Conclusion}
+% ============================================================
+The maximum benefit is $Z = 190\,000$\,\texteuro{} with $x_1 = 160$ and
+$x_2 = 40$. The graphical method and the simplex method in MATLAB give the
+same result. Constraint C3 is redundant. The minimum fuel use is $F = 90$
+units with $x_1 = x_2 = 30$ (or $F = 91$ with $x_1 = 31$, $x_2 = 29$ if A
+must fly strictly more than B).
+
+\EOD
+\end{document}

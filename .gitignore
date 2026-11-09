@@ -1,0 +1,14 @@
+# LaTeX build files
+build/
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+
+# MATLAB autosave files
+*.asv
+
+# macOS
+.DS_Store
